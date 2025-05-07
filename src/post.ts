@@ -25,22 +25,20 @@ async function main() {
   const containerClient = blobServiceClient.getContainerClient(state.container);
 
   const targetFileName = state.targetFileName;
-  // const [targetFileExists] = await bucket
-  //   .file(targetFileName)
-  //   .exists()
-  //   .catch((err) => {
-  //     core.error('Failed to check if the file already exists');
-  //     throw err;
-  //   });
 
+  const blobClient = containerClient.getBlobClient(targetFileName);
+  const targetFileExists = await blobClient.exists().catch((err) => {
+    core.error('Failed to check if an exact match exists');
+    throw err;
+  });
   core.debug(`Target file name: ${targetFileName}.`);
 
-  // if (targetFileExists) {
-  //   console.log(
-  //     '🌀 Skipping uploading cache as it already exists (probably due to another job).',
-  //   );
-  //   return;
-  // }
+  if (targetFileExists) {
+    console.log(
+      '🌀 Skipping uploading cache as it already exists (probably due to another job).',
+    );
+    return;
+  }
 
   const workspace = process.env.GITHUB_WORKSPACE ?? process.cwd();
   const globber = await glob.create(state.path, {
@@ -64,7 +62,6 @@ async function main() {
       });
 
     const customMetadata: Metadata = {
-      docType: 'text',
       CacheActionCompressionMethod: compressionMethod,
     };
 

@@ -103,7 +103,7 @@ async function main() {
   const compressionMethod = bestMatchMetadata?.metadata
     ?.CacheActionCompressionMethod as CompressionMethod;
 
-  // core.debug(`Best match compression method: ${compressionMethod}.`);
+  core.debug(`Best match compression method: ${compressionMethod}.`);
 
   if (!bestMatchMetadata || !compressionMethod) {
     saveState({
