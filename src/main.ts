@@ -101,7 +101,7 @@ async function main() {
   core.debug(`Best match metadata: ${JSON.stringify(bestMatchMetadata)}.`);
 
   const compressionMethod = bestMatchMetadata?.metadata
-    ?.CacheActionCompressionMethod as CompressionMethod;
+    ?.cacheactioncompressionmethod as CompressionMethod;
 
   core.debug(`Best match compression method: ${compressionMethod}.`);
 
