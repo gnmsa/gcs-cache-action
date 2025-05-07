@@ -3,8 +3,11 @@ author: 'MansaGroup'
 description: 'Cache your workload to a Google Cloud Storage bucket'
 
 inputs:
-  bucket:
-    description: Name of the bucket to store the cache into
+  storageAccount:
+    description: Name of the storage account
+    required: true
+  container:
+    description: Name of the container
     required: true
   path:
     description: Paths to store
@@ -18,10 +21,6 @@ inputs:
     required: false
   compression-method:
     description: Compression method for the archive (gzip or zstd)
-    default: ''
-    required: false
-  key-file-name:
-    description: GCS auth key file path
     default: ''
     required: false
 

@@ -1,6 +1,7 @@
 import * as core from '@actions/core';
 import * as glob from '@actions/glob';
-import { Storage } from '@google-cloud/storage';
+import { DefaultAzureCredential } from '@azure/identity';
+import { BlobServiceClient } from '@azure/storage-blob';
 import * as path from 'path';
 import { withFile as withTemporaryFile } from 'tmp-promise';
 
@@ -17,27 +18,30 @@ async function main() {
     );
     return;
   }
-
-  const bucket = new Storage({ keyFilename: state.keyFileName }).bucket(
-    state.bucket,
+  const credential = new DefaultAzureCredential();
+  const blobServiceClient = new BlobServiceClient(
+    `https://${state.storageAccount}.blob.core.windows.net`,
+    credential,
   );
+  const containerClient = blobServiceClient.getContainerClient(state.container);
+
   const targetFileName = state.targetFileName;
-  const [targetFileExists] = await bucket
-    .file(targetFileName)
-    .exists()
-    .catch((err) => {
-      core.error('Failed to check if the file already exists');
-      throw err;
-    });
+  // const [targetFileExists] = await bucket
+  //   .file(targetFileName)
+  //   .exists()
+  //   .catch((err) => {
+  //     core.error('Failed to check if the file already exists');
+  //     throw err;
+  //   });
 
   core.debug(`Target file name: ${targetFileName}.`);
 
-  if (targetFileExists) {
-    console.log(
-      '🌀 Skipping uploading cache as it already exists (probably due to another job).',
-    );
-    return;
-  }
+  // if (targetFileExists) {
+  //   console.log(
+  //     '🌀 Skipping uploading cache as it already exists (probably due to another job).',
+  //   );
+  //   return;
+  // }
 
   const workspace = process.env.GITHUB_WORKSPACE ?? process.cwd();
   const globber = await glob.create(state.path, {
@@ -70,12 +74,9 @@ async function main() {
       .group('🌐 Uploading cache archive to bucket', async () => {
         console.log(`🔹 Uploading file '${targetFileName}'...`);
 
-        await bucket.upload(tmpFile.path, {
-          destination: targetFileName,
-          metadata: {
-            metadata: customMetadata,
-          },
-        });
+        const blockBlobClient =
+          containerClient.getBlockBlobClient(targetFileName);
+        await blockBlobClient.uploadFile(tmpFile.path);
       })
       .catch((err) => {
         core.error('Failed to upload the file');

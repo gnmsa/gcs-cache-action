@@ -4,7 +4,8 @@ export type CacheHitKindState = 'exact' | 'partial' | 'none';
 
 export interface State {
   path: string;
-  bucket: string;
+  storageAccount: string;
+  container: string;
   cacheHitKind: CacheHitKindState;
   targetFileName: string;
   keyFileName?: string;
@@ -14,7 +15,8 @@ export interface State {
 export function saveState(state: State): void {
   core.debug(`Saving state: ${JSON.stringify(state)}.`);
 
-  core.saveState('bucket', state.bucket);
+  core.saveState('storageAccount', state.storageAccount);
+  core.saveState('container', state.container);
   core.saveState('path', state.path);
   core.saveState('cache-hit-kind', state.cacheHitKind);
   core.saveState('target-file-name', state.targetFileName);
@@ -25,7 +27,8 @@ export function saveState(state: State): void {
 export function getState(): State {
   const state = {
     path: core.getState('path'),
-    bucket: core.getState('bucket'),
+    storageAccount: core.getState('storageAccount'),
+    container: core.getState('container'),
     cacheHitKind: core.getState('cache-hit-kind') as CacheHitKindState,
     targetFileName: core.getState('target-file-name'),
     keyFileName: core.getState('key-file-name'),

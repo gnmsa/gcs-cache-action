@@ -1,7 +1,8 @@
 import * as core from '@actions/core';
 
 export interface Inputs {
-  bucket: string;
+  storageAccount: string;
+  container: string;
   path: string;
   key: string;
   restoreKeys: string[];
@@ -11,7 +12,8 @@ export interface Inputs {
 
 export function getInputs(): Inputs {
   const inputs = {
-    bucket: core.getInput('bucket', { required: true }),
+    storageAccount: core.getInput('storageAccount', { required: true }),
+    container: core.getInput('container', { required: true }),
     path: core.getInput('path', { required: true }),
     key: core.getInput('key', { required: true }),
     keyFileName: core.getInput('key-file-name'),
