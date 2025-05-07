@@ -1,11 +1,10 @@
 import * as core from '@actions/core';
 import * as glob from '@actions/glob';
 import { DefaultAzureCredential } from '@azure/identity';
-import { BlobServiceClient } from '@azure/storage-blob';
+import { BlobServiceClient, Metadata } from '@azure/storage-blob';
 import * as path from 'path';
 import { withFile as withTemporaryFile } from 'tmp-promise';
 
-import { CacheActionMetadata } from './gcs-utils';
 import { getState } from './state';
 import { createTar } from './tar-utils';
 
@@ -64,8 +63,9 @@ async function main() {
         throw err;
       });
 
-    const customMetadata: CacheActionMetadata = {
-      'Cache-Action-Compression-Method': compressionMethod,
+    const customMetadata: Metadata = {
+      docType: 'text',
+      CacheActionCompressionMethod: compressionMethod,
     };
 
     core.debug(`Metadata: ${JSON.stringify(customMetadata)}.`);
@@ -77,6 +77,7 @@ async function main() {
         const blockBlobClient =
           containerClient.getBlockBlobClient(targetFileName);
         await blockBlobClient.uploadFile(tmpFile.path);
+        await blockBlobClient.setMetadata(customMetadata);
       })
       .catch((err) => {
         core.error('Failed to upload the file');

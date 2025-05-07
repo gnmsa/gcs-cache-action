@@ -93,35 +93,33 @@ async function main() {
 
   core.debug(`Best match name: ${bestMatch.name}.`);
 
-  // const bestMatchMetadata = await bestMatch
-  //   .getProperties()
-  //   .then(([metadata]) => metadata as ObjectMetadata)
-  //   .catch((err) => {
-  //     core.error('Failed to read object metadatas');
-  //     throw err;
-  //   });
+  const bestMatchMetadata = await bestMatch.getProperties().catch((err) => {
+    core.error('Failed to read object metadatas');
+    throw err;
+  });
 
-  // core.debug(`Best match metadata: ${JSON.stringify(bestMatchMetadata)}.`);
+  core.debug(`Best match metadata: ${JSON.stringify(bestMatchMetadata)}.`);
 
-  // const compressionMethod =
-  //   bestMatchMetadata?.metadata?.['Cache-Action-Compression-Method'];
+  const compressionMethod = bestMatchMetadata?.metadata
+    ?.CacheActionCompressionMethod as CompressionMethod;
 
   // core.debug(`Best match compression method: ${compressionMethod}.`);
 
-  // if (!bestMatchMetadata || !compressionMethod) {
-  //   saveState({
-  //     bucket: inputs.bucket,
-  //     path: inputs.path,
-  //     compressionMethod: inputs.compressionMethod,
-  //     keyFileName: inputs.keyFileName,
-  //     cacheHitKind: 'none',
-  //     targetFileName: exactFileName,
-  //   });
+  if (!bestMatchMetadata || !compressionMethod) {
+    saveState({
+      storageAccount: inputs.storageAccount,
+      container: inputs.container,
+      path: inputs.path,
+      compressionMethod: inputs.compressionMethod,
+      keyFileName: inputs.keyFileName,
+      cacheHitKind: 'none',
+      targetFileName: exactFileName,
+    });
 
-  //   core.setOutput('cache-hit', 'false');
-  //   console.log('😢 No cache candidate found (missing metadata).');
-  //   return;
-  // }
+    core.setOutput('cache-hit', 'false');
+    console.log('😢 No cache candidate found (missing metadata).');
+    return;
+  }
 
   const workspace = process.env.GITHUB_WORKSPACE ?? process.cwd();
 
@@ -139,7 +137,7 @@ async function main() {
 
     await core
       .group('🗜️ Extracting cache archive', () =>
-        extractTar(tmpFile.path, CompressionMethod.ZSTD, workspace),
+        extractTar(tmpFile.path, compressionMethod, workspace),
       )
       .catch((err) => {
         core.error('Failed to extract the archive');

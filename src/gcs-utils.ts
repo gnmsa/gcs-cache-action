@@ -6,5 +6,5 @@ export interface ObjectMetadata {
 }
 
 export interface CacheActionMetadata {
-  'Cache-Action-Compression-Method': CompressionMethod;
+  CacheActionCompressionMethod: CompressionMethod;
 }
