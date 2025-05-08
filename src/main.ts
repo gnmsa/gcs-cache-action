@@ -59,9 +59,17 @@ async function getBestMatch(
       }
     }
     if (newestBlob) {
-      console.log(`🤝 Found match from cache for restore key '${key}'.`);
-      const blobClient = containerClient.getBlobClient(newestBlob.name);
-      return [blobClient, 'partial'];
+      const partialBlobClient = containerClient.getBlobClient(newestBlob.name);
+      const partialBlobClientExists = await partialBlobClient
+        .exists()
+        .catch((err) => {
+          core.error('Failed to check if a partial match exists');
+          throw err;
+        });
+      if (partialBlobClientExists) {
+        console.log(`🤝 Found match from cache for restore key '${key}'.`);
+        return [partialBlobClient, 'partial'];
+      }
     }
     console.log(`🔸 No cache candidate found for restore key '${key}'.`);
   }
