@@ -5,8 +5,10 @@ import * as github from '@actions/github';
 import { DefaultAzureCredential } from '@azure/identity';
 import {
   BlobClient,
+  BlobItem,
   BlobServiceClient,
   ContainerClient,
+  ContainerListBlobsOptions,
 } from '@azure/storage-blob';
 import { withFile as withTemporaryFile } from 'tmp-promise';
 
@@ -36,16 +38,32 @@ async function getBestMatch(
   if (exactFileExists) {
     console.log(`🙌 Found exact match from cache for key '${key}'.`);
     return [blobClient, 'exact'];
-  } else {
-    console.log(`🔸 No exact match found for key '${key}'.`);
   }
+  console.log(`🔸 No exact match found for key '${key}'.`);
 
   for (const key of restoreKeys) {
-    const blobClient = containerClient.getBlobClient(`${folderPrefix}/${key}`);
-    const exists = await blobClient.exists();
-    if (exists) {
+    const containerListBlobsOptions: ContainerListBlobsOptions = {
+      prefix: `${folderPrefix}/${key}`,
+    };
+    let newestBlob: BlobItem | undefined;
+    for await (const blob of containerClient.listBlobsFlat(
+      containerListBlobsOptions,
+    )) {
+      const lastModified = blob.properties.lastModified;
+
+      if (
+        !newestBlob ||
+        lastModified > (newestBlob.properties.lastModified ?? new Date(0))
+      ) {
+        newestBlob = blob;
+      }
+    }
+    if (newestBlob) {
+      console.log(`🤝 Found match from cache for restore key '${key}'.`);
+      const blobClient = containerClient.getBlobClient(newestBlob.name);
       return [blobClient, 'partial'];
     }
+    console.log(`🔸 No cache candidate found for restore key '${key}'.`);
   }
 
   return [null, 'none'];
