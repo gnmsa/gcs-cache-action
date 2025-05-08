@@ -154,7 +154,7 @@ async function main() {
       .group('🌐 Downloading cache archive from bucket', async () => {
         console.log(`🔹 Downloading file '${bestMatch.name}'...`);
 
-        return blobClient.downloadToFile(tmpFile.path);
+        return bestMatch.downloadToFile(tmpFile.path);
       })
       .catch((err) => {
         core.error('Failed to download the file');
